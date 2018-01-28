@@ -1,0 +1,20 @@
+{
+  "name": "nightingale",
+  "sources": [
+    "src"
+  ],
+  "bs-dependencies": [
+    "@jaredly/reprocessing"
+  ],
+  "entries": [{
+    "backend": "bytecode",
+    "main-module": "IndexHot"
+  },{
+    "backend": "native",
+    "main-module": "Index"
+  },{
+    "backend": "js",
+    "main-module": "Index"
+  }],
+  "refmt": 3,
+}

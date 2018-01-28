@@ -1,0 +1,19 @@
+{
+  "name": "nightingale",
+  "scripts": {
+    "start": "rsb native:hot",
+    "native": "rsb native",
+    "bundle": "rsb native:bundle",
+    "all": "rsb all",
+    "js": "rsb js",
+    "serve": "rsb js:serve",
+    "clean": "rm -rf _build && bsb -clean-world"
+  },
+  "dependencies": {
+    "@jaredly/reprocessing": "1.1.5"
+  },
+  "devDependencies": {
+    "bs-platform": "bsansouci/bsb-native#fast",
+    "reprocessing-scripts": "^1.3.5"
+  }
+}
