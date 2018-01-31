@@ -115,7 +115,7 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
       let newForceY = switch (action) {
       | JumpRight
       | JumpLeft
-      | JumpUp when forceY > -3000. => -3000.
+      | JumpUp when forceY > -7000. => -7000.
       | _ => forceY
       };
 
