@@ -21,7 +21,7 @@ let make = (~position: (float, float)) => {
       ~position,
       ~mass=0.,
       ~restitution=0.2,
-      ~size=(1, 1),
+      ~size=(1., 1.),
       ~staticFriction=0.05,
       ~dynamicFriction=0.35
     );

@@ -94,7 +94,7 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
       ~position=(0., -2.),
       ~mass=50.,
       ~restitution=0.2,
-      ~size=(1, 2),
+      ~size=(0.792, 1.83),
       ~staticFriction=0.05,
       ~dynamicFriction=0.35
     );
@@ -178,7 +178,6 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
     }
   },
   render: ({ animation }, body, assets, env) => {
-    let (width, height) = Body.getPixelSize(body);
     let (x, y) = Body.getPixelPosition(body);
 
     let currImage = switch (animation) {
@@ -206,7 +205,7 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
 
     Draw.pushMatrix(env);
     Draw.translate(~x, ~y=y +. 4., env);
-    Draw.image(currImage, ~pos=(0, 0), ~width, ~height, env);
+    Draw.image(currImage, ~pos=(-5, -4), ~width=48, ~height=96, env);
     Draw.popMatrix(env);
   }
 };

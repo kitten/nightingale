@@ -4,7 +4,7 @@ open Animation;
 type bodyT = {
   hasCollision: bool,
   mass: float,
-  size: (int, int),
+  size: (float, float),
   velocity: (float, float),
   force: (float, float),
   restitution: float,
@@ -18,7 +18,7 @@ let makeBody = (
   ~position: (float, float),
   ~mass: float,
   ~restitution: float,
-  ~size: (int, int),
+  ~size: (float, float),
   ~staticFriction: float,
   ~dynamicFriction: float
 ) => {
@@ -35,17 +35,16 @@ let makeBody = (
 };
 
 /* constant determining how many pixels are in a metre */
-let px_in_metres = 48;
-let px_in_metres_f = 48.;
+let px_in_metres = 48.;
 /* constant determining the amount of floating-point drift correction */
 let driftCorrection = 0.2;
 let driftSlop = 0.01;
 
-let getPixelPosition = (body: bodyT) => mult(px_in_metres_f, body.position);
+let getPixelPosition = (body: bodyT) => mult(px_in_metres, body.position);
 
 let getPixelSize = (body: bodyT) => {
   let (w, h) = body.size;
-  (w * px_in_metres, h * px_in_metres);
+  (int_of_float(w *. px_in_metres), int_of_float(h *. px_in_metres))
 };
 
 let stepVelocity = (env: glEnvT, body: bodyT) => {
@@ -80,7 +79,7 @@ let applyGravity = (env: glEnvT, body: bodyT) => {
 let getCoordinates = (body: bodyT) : ((float, float), (float, float)) => {
   let (minx, miny) = body.position;
   let (sizex, sizey) = body.size;
-  let max = (minx +. float_of_int(sizex), miny +. float_of_int(sizey));
+  let max = (minx +. sizex, miny +. sizey);
   (body.position, max)
 };
 

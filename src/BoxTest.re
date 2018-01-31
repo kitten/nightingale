@@ -15,7 +15,7 @@ let make = () => {
       ~position=(2., 0.),
       ~mass=0.,
       ~restitution=0.05,
-      ~size=(1, 2),
+      ~size=(1., 2.),
       ~staticFriction=0.6,
       ~dynamicFriction=0.4
     );
