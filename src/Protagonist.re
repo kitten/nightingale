@@ -91,7 +91,7 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
   ...entity,
   initBody: (_env, _global) => {
     let body = Body.makeBody(
-      ~position=(0., -1.),
+      ~position=(0., -2.),
       ~mass=50.,
       ~restitution=0.2,
       ~size=(1, 2),
@@ -205,7 +205,7 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
     };
 
     Draw.pushMatrix(env);
-    Draw.translate(~x, ~y, env);
+    Draw.translate(~x, ~y=y +. 4., env);
     Draw.image(currImage, ~pos=(0, 0), ~width, ~height, env);
     Draw.popMatrix(env);
   }

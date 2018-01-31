@@ -16,7 +16,7 @@ let step = (state, env) => {
 };
 
 let draw = (_state, env) => {
-  Draw.background(Utils.color(~r=47, ~g=54, ~b=64, ~a=255), env);
+  Draw.background(Utils.color(~r=44, ~g=52, ~b=61, ~a=255), env);
   Draw.translate(~x=400., ~y=300., env);
 };
 
@@ -32,42 +32,100 @@ let getBody = (bodyId: int, global: stateT) =>
 let updateBody = (global: stateT, bodyId: int, body: Body.bodyT) =>
   Array.set(global.bodies, bodyId, body);
 
-let bodyResolution = (state, env) => {
-  let bodies = Array.copy(state.bodies);
-  let collisionMarker = Array.make(Array.length(bodies), false);
-  let visitMarker = Array.make(Array.length(bodies), false);
+let makePairIdentifier = (i: int, j: int) =>
+  i < j ? (i, j) : (j, i);
+
+let createPairs = (bodies: array(Body.bodyT)) => {
   let lastIndex = Array.length(bodies) - 1;
+  let table = Hashtbl.create(Array.length(bodies));
 
+  /* check each pair of bodies for collisions and override duplicates with
+     collisions of a higher depth */
   for (i in 0 to lastIndex) {
-    Array.set(visitMarker, i, true);
-
-    for (j in 0 to lastIndex) {
-      if (!Array.get(visitMarker, j)) {
-        Array.set(visitMarker, j, true);
+    for (j in i to lastIndex) {
+      if (i !== j) {
         let bodyA = Array.get(bodies, i);
         let bodyB = Array.get(bodies, j);
 
-        if (Body.isColliding(bodyA, bodyB)) {
-          Array.set(collisionMarker, i, true);
-          Array.set(collisionMarker, j, true);
+        if (bodyA.mass != 0. || bodyB.mass != 0.) {
+          let identifier = makePairIdentifier(i, j);
+          let norm = Body.collisionNormal(bodyA, bodyB);
+          let (_, overlapNew) = norm;
 
-          let (newBodyA, newBodyB) = Body.resolveCollision(bodyA, bodyB, env);
-          Array.set(bodies, i, newBodyA);
-          Array.set(bodies, j, newBodyB);
+          switch (Hashtbl.find(table, identifier)) {
+          | exception Not_found =>
+            if (overlapNew != 0.) {
+              Hashtbl.add(table, identifier, norm)
+            }
+          | (_, overlapOld) when overlapNew > overlapOld && overlapNew != 0. =>
+            Hashtbl.replace(table, identifier, norm)
+          | _ => ()
+          };
         };
       };
     };
   };
 
-  for (i in 0 to lastIndex) {
-    let hasCollision = Array.get(collisionMarker, i);
-    {...Array.get(bodies, i), hasCollision }
+  /* create pairs from hashtable */
+  let pairs = Hashtbl.fold(((i, j), collisionNormal, acc) => {
+    let bodyA = Array.get(bodies, i);
+    let bodyB = Array.get(bodies, j);
+    let pair = (bodyA, bodyB, collisionNormal, (i, j));
+    Array.append(acc, [|pair|])
+  }, table, [||]);
+
+  /* sort by significance to avoid overriding more important with
+     less important collisions */
+  Array.fast_sort((
+    lhPair: (Body.bodyT, Body.bodyT, ((float, float), float), (int, int)),
+    rhPair: (Body.bodyT, Body.bodyT, ((float, float), float), (int, int))
+  ) => {
+    let (alh, blh, (_, lhDepth), _) = lhPair;
+    let (arh, brh, (_, rhDepth), _) = rhPair;
+    let (alh_x, alh_y) = alh.position;
+    let (arh_x, arh_y) = arh.position;
+    let (blh_x, blh_y) = blh.position;
+    let (brh_x, brh_y) = brh.position;
+
+    /* higher depth comes later (override),
+       higher position (LTR) comes later */
+    if (lhDepth < rhDepth) {
+      -1
+    } else if (alh_x < arh_x && alh_y < arh_y) {
+      -1
+    } else if (blh_x < brh_x && blh_y < brh_y) {
+      -1
+    } else {
+      1
+    }
+  }, pairs);
+
+  pairs
+};
+
+let bodyResolution = (state, env) => {
+  let bodies = Array.copy(state.bodies);
+  let pairs = createPairs(bodies);
+  let collisions = Array.make(Array.length(bodies), false);
+
+  /* resolve all pairs' collisions and mark collision */
+  Array.iter(pair => {
+    let (bodyA, bodyB, (n, depth), (i, j)) = pair;
+    let (newBodyA, newBodyB) = Body.applyImpulse(bodyA, bodyB, n, depth);
+    Array.set(bodies, i, newBodyA);
+    Array.set(bodies, j, newBodyB);
+    Array.set(collisions, i, true);
+    Array.set(collisions, j, true);
+  }, pairs);
+
+  /* update the physics loop */
+  state.bodies = Array.mapi((i: int, body: Body.bodyT) : Body.bodyT => {
+    let hasCollision = Array.get(collisions, i);
+    { ...body, hasCollision: hasCollision }
       |> Body.applyForce(env)
       |> Body.applyGravity(env)
       |> Body.stepVelocity(env)
-      |> Array.set(bodies, i);
-  };
+  }, bodies);
 
-  state.bodies = bodies;
   state
 };

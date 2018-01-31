@@ -38,8 +38,8 @@ let makeBody = (
 let px_in_metres = 48;
 let px_in_metres_f = 48.;
 /* constant determining the amount of floating-point drift correction */
-let driftCorrection = 0.5;
-let driftSlop = 0.05;
+let driftCorrection = 0.2;
+let driftSlop = 0.01;
 
 let getPixelPosition = (body: bodyT) => mult(px_in_metres_f, body.position);
 
@@ -87,44 +87,46 @@ let getCoordinates = (body: bodyT) : ((float, float), (float, float)) => {
 let isColliding = (bodyA: bodyT, bodyB: bodyT) : bool => {
   let ((a_minx, a_miny), (a_maxx, a_maxy)) = getCoordinates(bodyA);
   let ((b_minx, b_miny), (b_maxx, b_maxy)) = getCoordinates(bodyB);
+
   !(
     (a_maxx < b_minx || a_minx > b_maxx) ||
     (a_maxy < b_miny || a_miny > b_maxy)
-  )
+  ) && (bodyA.mass != 0. || bodyB.mass != 0.)
 };
 
 /* returns directional collision-normal vector and depth of overlap */
-let collisionNormal = (bodyA: bodyT, bodyB: bodyT) : option(((float, float), float)) => {
-  let ((a_minx, a_miny), (a_maxx, a_maxy)) = getCoordinates(bodyA);
-  let ((b_minx, b_miny), (b_maxx, b_maxy)) = getCoordinates(bodyB);
-  let (nx, ny) = subtract(bodyB.position, bodyA.position);
-
-  let extent_ax = a_maxx -. a_minx;
-  let extent_bx = b_maxx -. b_minx;
-  let extent_tx = (nx < 0. ? extent_bx : extent_ax) -. abs_float(nx);
-  let overlap_x = abs_float(-1.0 *. (extent_tx -. extent_bx -. extent_ax) -. extent_bx -. extent_ax);
-
-  let extent_ay = a_maxy -. a_miny;
-  let extent_by = b_maxy -. b_miny;
-  let extent_ty = (ny < 0. ? extent_by : extent_ay) -. abs_float(ny);
-  let overlap_y = abs_float(-1.0 *. (extent_ty -. extent_by -. extent_ay) -. extent_by -. extent_ay);
-
-  let res = if (overlap_x < overlap_y) {
-    if (nx < 0.) {
-      ((-1., 0.), overlap_x)
-    } else {
-      ((1., 0.), overlap_x)
-    }
+let collisionNormal = (bodyA: bodyT, bodyB: bodyT) : ((float, float), float) =>
+  if (!isColliding(bodyA, bodyB)) {
+    ((0., 0.), 0.)
   } else {
-    if (ny < 0.) {
-      ((0., -1.), overlap_y)
+    let ((a_minx, a_miny), (a_maxx, a_maxy)) = getCoordinates(bodyA);
+    let ((b_minx, b_miny), (b_maxx, b_maxy)) = getCoordinates(bodyB);
+    let (nx, ny) = subtract(bodyB.position, bodyA.position);
+
+    let extent_ax = a_maxx -. a_minx;
+    let extent_bx = b_maxx -. b_minx;
+    let extent_tx = (nx < 0. ? extent_bx : extent_ax) -. abs_float(nx);
+    let overlap_x = abs_float(-1.0 *. (extent_tx -. extent_bx -. extent_ax) -. extent_bx -. extent_ax);
+
+    let extent_ay = a_maxy -. a_miny;
+    let extent_by = b_maxy -. b_miny;
+    let extent_ty = (ny < 0. ? extent_by : extent_ay) -. abs_float(ny);
+    let overlap_y = abs_float(-1.0 *. (extent_ty -. extent_by -. extent_ay) -. extent_by -. extent_ay);
+
+    if (overlap_x < overlap_y) {
+      if (nx < 0.) {
+        ((-1., 0.), overlap_x)
+      } else {
+        ((1., 0.), overlap_x)
+      }
     } else {
-      ((0., 1.), overlap_y)
+      if (ny < 0.) {
+        ((0., -1.), overlap_y)
+      } else {
+        ((0., 1.), overlap_y)
+      }
     }
   };
-
-  Some(res)
-};
 
 let applyImpulse = (bodyA: bodyT, bodyB: bodyT, n: (float, float), depth: float) => {
   let rv = subtract(bodyB.velocity, bodyA.velocity); /* relative velocity */
@@ -178,12 +180,3 @@ let applyImpulse = (bodyA: bodyT, bodyB: bodyT, n: (float, float), depth: float)
     )
   }
 };
-
-let resolveCollision = (bodyA: bodyT, bodyB: bodyT, _env: glEnvT) : (bodyT, bodyT) => {
-  /* calculate potential contact normal */
-  switch (collisionNormal(bodyA, bodyB)) {
-  | Some((n, depth)) => applyImpulse(bodyA, bodyB, n, depth)
-  | None => (bodyA, bodyB)
-  }
-};
-
