@@ -42,7 +42,7 @@ let createPairs = (bodies: array(Body.bodyT)) => {
   /* check each pair of bodies for collisions and override duplicates with
      collisions of a higher depth */
   for (i in 0 to lastIndex) {
-    for (j in i to lastIndex) {
+    for (j in 0 to lastIndex) {
       if (i !== j) {
         let bodyA = Array.get(bodies, i);
         let bodyB = Array.get(bodies, j);
@@ -76,7 +76,7 @@ let createPairs = (bodies: array(Body.bodyT)) => {
 
   /* sort by significance to avoid overriding more important with
      less important collisions */
-  Array.fast_sort((
+  Array.stable_sort((
     lhPair: (Body.bodyT, Body.bodyT, ((float, float), float), (int, int)),
     rhPair: (Body.bodyT, Body.bodyT, ((float, float), float), (int, int))
   ) => {
@@ -103,7 +103,7 @@ let createPairs = (bodies: array(Body.bodyT)) => {
   pairs
 };
 
-let bodyResolution = (state, env) => {
+let bodyResolution = (state, dt) => {
   let bodies = Array.copy(state.bodies);
   let pairs = createPairs(bodies);
   let collisions = Array.make(Array.length(bodies), false);
@@ -119,13 +119,10 @@ let bodyResolution = (state, env) => {
   }, pairs);
 
   /* update the physics loop */
-  state.bodies = Array.mapi((i: int, body: Body.bodyT) : Body.bodyT => {
+  let bodies = Array.mapi((i: int, body: Body.bodyT) : Body.bodyT => {
     let hasCollision = Array.get(collisions, i);
-    { ...body, hasCollision: hasCollision }
-      |> Body.applyForce(env)
-      |> Body.applyGravity(env)
-      |> Body.stepVelocity(env)
+    {...Body.step(dt, body), hasCollision}
   }, bodies);
 
-  state
+  {...state, bodies}
 };

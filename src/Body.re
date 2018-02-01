@@ -47,34 +47,24 @@ let getPixelSize = (body: bodyT) => {
   (int_of_float(w *. px_in_metres), int_of_float(h *. px_in_metres))
 };
 
-let stepVelocity = (env: glEnvT, body: bodyT) => {
-  let dt = Env.deltaTime(env);
-  let (vx, vy) = body.velocity;
-  let (dx, dy) = (vx *. dt, vy *. dt);
-  let (x, y) = body.position;
-  let position = (dx +. x, dy +. y);
-  { ...body, position }
-};
-
-let applyForce = (env: glEnvT, body: bodyT) =>
+let step = (dt: float, body: bodyT) =>
   if (body.mass == 0.) {
     body
   } else {
-    let dt = Env.deltaTime(env);
+    let gravity = 10. *. body.gravityFactor;
+    let (vx, vy) = body.velocity;
     let (forceX, forceY) = body.force;
-    let (pvx, pvy) = body.velocity;
-    let (ax, ay) = (forceX /. body.mass *. dt, forceY /. body.mass *. dt);
-    let velocity = (ax +. pvx, ay +. pvy);
-    { ...body, force: (0., 0.), velocity }
-  };
 
-let applyGravity = (env: glEnvT, body: bodyT) => {
-  let dt = Env.deltaTime(env);
-  let { gravityFactor } = body;
-  let (pvx, pvy) = body.velocity;
-  let velocity = (pvx, 9.8 *. gravityFactor *. dt +. pvy);
-  { ...body, velocity }
-};
+    let dvx = forceX *. (1. /. body.mass) *. dt;
+    let dvy = ((forceY *. (1. /. body.mass)) +. gravity) *. dt;
+    let new_vx = vx +. dvx;
+    let new_vy = vy +. dvy;
+
+    let velocity = (new_vx, new_vy);
+    let position = add(body.position, (new_vx *. dt, new_vy *. dt));
+    let force = (0., 0.);
+    {...body, velocity, position, force}
+  };
 
 let getCoordinates = (body: bodyT) : ((float, float), (float, float)) => {
   let (minx, miny) = body.position;
@@ -143,9 +133,10 @@ let applyImpulse = (bodyA: bodyT, bodyB: bodyT, n: (float, float), depth: float)
     let impulse = mult(j, n);
 
     /* apply floating-point drift correction */
-    let correction = max(depth -. driftSlop, 0.) /. (invmass_a +. invmass_b) *. driftCorrection;
-    let positionA = subtract(bodyA.position, mult(correction *. invmass_a, n));
-    let positionB = add(bodyB.position, mult(correction *. invmass_b, n));
+    let d = max(depth -. driftSlop, 0.) /. (invmass_a +. invmass_b) *. driftCorrection;
+    let correction = mult(d, n);
+    let positionA = subtract(bodyA.position, mult(invmass_a, correction));
+    let positionB = add(bodyB.position, mult(invmass_b, correction));
 
     /* apply velocities based on the bodies' mass ratio */
     let velocityA = subtract(bodyA.velocity, mult(invmass_a, impulse));

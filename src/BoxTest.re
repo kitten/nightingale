@@ -8,18 +8,17 @@ let action = (_state, _body, _env) => ();
 
 let entity = Entity.makeEntity(~name="BoxTest", ~initState, ~initAssets, ~action);
 
-let make = () => {
+let make = (~position: (float, float)) => {
   ...entity,
   initBody: (_env, _global) => {
-    let body = Body.makeBody(
-      ~position=(2., 0.),
-      ~mass=0.,
+    Body.makeBody(
+      ~position,
+      ~mass=30.,
       ~restitution=0.05,
-      ~size=(1., 2.),
-      ~staticFriction=0.6,
-      ~dynamicFriction=0.4
+      ~size=(1., 1.),
+      ~staticFriction=0.2,
+      ~dynamicFriction=0.2
     );
-    { ...body, gravityFactor: 0. }
   },
   render: (_state, body, _assets, env) => {
     let (width, height) = Body.getPixelSize(body);
