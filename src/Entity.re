@@ -12,7 +12,7 @@ type entityT('stateT, 'assetsT, 'actionT) = {
 };
 
 let initBodyDefault = (_env, _global) : Body.bodyT => {
-  hasCollision: false,
+  isOnGround: false,
   mass: 0.,
   size: (0., 0.),
   velocity: (0., 0.),

@@ -75,7 +75,7 @@ let action = (_state, body: Body.bodyT, env) => {
   let isRight = Env.key(Events.Right, env) || Env.key(Events.D, env);
   let isUp = Env.key(Events.Up, env) || Env.key(Events.W, env) || Env.key(Events.Space, env);
 
-  switch (body.hasCollision, isLeft, isRight, isUp) {
+  switch (body.isOnGround, isLeft, isRight, isUp) {
   | (true, false, true, false) => MoveRight
   | (true, true, false, false) => MoveLeft
   | (true, false, true, true) => JumpRight
@@ -101,7 +101,7 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
     { ...body, gravityFactor: 1. }
   },
   updateBody: (body, action, _env, _global) => {
-    if (body.hasCollision) {
+    if (body.isOnGround) {
       let (forceX, forceY) = body.force;
 
       let newForceX = switch (action) {
@@ -158,11 +158,11 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
       ...state,
       animation: RunningLeft(calcRunningKeyframe(state.animationStart, tick))
     }
-    | (MidAirRight, None) when body.hasCollision => {
+    | (MidAirRight, None) when body.isOnGround => {
       ...state,
       animation: StandingRight
     }
-    | (MidAirLeft, None) when body.hasCollision => {
+    | (MidAirLeft, None) when body.isOnGround => {
       ...state,
       animation: StandingLeft
     }

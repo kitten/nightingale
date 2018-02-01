@@ -2,7 +2,7 @@ open Reprocessing;
 open Animation;
 
 type bodyT = {
-  hasCollision: bool,
+  isOnGround: bool,
   mass: float,
   size: (float, float),
   velocity: (float, float),
@@ -22,7 +22,7 @@ let makeBody = (
   ~staticFriction: float,
   ~dynamicFriction: float
 ) => {
-  hasCollision: false,
+  isOnGround: false,
   mass,
   size,
   velocity: (0., 0.),

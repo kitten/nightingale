@@ -106,7 +106,7 @@ let createPairs = (bodies: array(Body.bodyT)) => {
 let bodyResolution = (state, dt) => {
   let bodies = Array.copy(state.bodies);
   let pairs = createPairs(bodies);
-  let collisions = Array.make(Array.length(bodies), false);
+  let groundCollisions = Array.make(Array.length(bodies), false);
 
   /* resolve all pairs' collisions and mark collision */
   Array.iter(pair => {
@@ -114,14 +114,19 @@ let bodyResolution = (state, dt) => {
     let (newBodyA, newBodyB) = Body.applyImpulse(bodyA, bodyB, n, depth);
     Array.set(bodies, i, newBodyA);
     Array.set(bodies, j, newBodyB);
-    Array.set(collisions, i, true);
-    Array.set(collisions, j, true);
+
+    let (_, ny) = n;
+    if (ny > 0.) {
+      Array.set(groundCollisions, i, true);
+    } else if (ny < 0.) {
+      Array.set(groundCollisions, j, true);
+    };
   }, pairs);
 
   /* update the physics loop */
   let bodies = Array.mapi((i: int, body: Body.bodyT) : Body.bodyT => {
-    let hasCollision = Array.get(collisions, i);
-    {...Body.step(dt, body), hasCollision}
+    let isOnGround = Array.get(groundCollisions, i);
+    {...Body.step(dt, body), isOnGround}
   }, bodies);
 
   {...state, bodies}
