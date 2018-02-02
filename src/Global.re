@@ -126,7 +126,7 @@ let bodyResolution = (state, dt) => {
   /* update the physics loop */
   let bodies = Array.mapi((i: int, body: Body.bodyT) : Body.bodyT => {
     let isOnGround = Array.get(groundCollisions, i);
-    {...Body.step(dt, body), isOnGround}
+    {...Body.step(dt, body, isOnGround), isOnGround}
   }, bodies);
 
   {...state, bodies}

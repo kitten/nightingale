@@ -19,8 +19,8 @@ let entity = Entity.instance(Protagonist.make())
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(2., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(3., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(4., 3.))))
-  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 1.))))
-  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 2.))));
+  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 2.))))
+  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 1.))));
 
 let setup = (env) => {
   let global = Global.setup(env);
@@ -41,7 +41,7 @@ let draw = ({ acc: prevAcc, global: prevGlobal, instance: prevInstance }, env) =
     acc := acc^ -. dt;
   };
 
-  Global.draw(global, env);
+  Global.draw(global^, env);
   entity.draw(instance, global^, env);
 
   { acc: acc^, global: global^, instance: instance }

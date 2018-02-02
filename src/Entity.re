@@ -20,7 +20,6 @@ let initBodyDefault = (_env, _global) : Body.bodyT => {
   restitution: 0.1,
   gravityFactor: 1.,
   staticFriction: 0.5,
-  dynamicFriction: 0.2,
   position: (0., 0.)
 };
 

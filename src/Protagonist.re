@@ -95,8 +95,7 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
       ~mass=50.,
       ~restitution=0.2,
       ~size=(0.792, 1.83),
-      ~staticFriction=0.05,
-      ~dynamicFriction=0.35
+      ~staticFriction=0.05
     );
     { ...body, gravityFactor: 1. }
   },
@@ -106,9 +105,9 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
 
       let newForceX = switch (action) {
       | JumpRight
-      | MoveRight when forceX < 500. => 500.
+      | MoveRight when forceX < 700. => 700.
       | JumpLeft
-      | MoveLeft when forceX > -500. => -500.
+      | MoveLeft when forceX > -700. => -700.
       | _ => forceX
       };
 

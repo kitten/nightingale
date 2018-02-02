@@ -10,7 +10,6 @@ type bodyT = {
   restitution: float,
   gravityFactor: float,
   staticFriction: float,
-  dynamicFriction: float,
   position: (float, float)
 };
 
@@ -19,8 +18,7 @@ let makeBody = (
   ~mass: float,
   ~restitution: float,
   ~size: (float, float),
-  ~staticFriction: float,
-  ~dynamicFriction: float
+  ~staticFriction: float
 ) => {
   isOnGround: false,
   mass,
@@ -30,7 +28,6 @@ let makeBody = (
   restitution,
   gravityFactor: 1.,
   staticFriction,
-  dynamicFriction,
   position
 };
 
@@ -47,7 +44,7 @@ let getPixelSize = (body: bodyT) => {
   (int_of_float(w *. px_in_metres), int_of_float(h *. px_in_metres))
 };
 
-let step = (dt: float, body: bodyT) =>
+let step = (dt: float, body: bodyT, isOnGround: bool) =>
   if (body.mass == 0.) {
     body
   } else {
@@ -64,7 +61,7 @@ let step = (dt: float, body: bodyT) =>
     let position = add(body.position, (new_vx *. dt, new_vy *. dt));
 
     let gravityForceY = 10. *. body.gravityFactor *. body.mass;
-    let force = (0., gravityForceY);
+    let force = (0., isOnGround ? 0. : gravityForceY);
     {...body, velocity, position, force}
   };
 
@@ -122,7 +119,7 @@ let collisionNormal = (bodyA: bodyT, bodyB: bodyT) : ((float, float), float) =>
 let getInvmass = (body: bodyT) =>
   if (body.mass == 0.) { 0. } else { 1. /. body.mass };
 
-let applyFriction = (bodyA: bodyT, bodyB: bodyT, j: float, n: (float, float)) => {
+let applyFriction = (bodyA: bodyT, bodyB: bodyT, n: (float, float)) => {
   let invmass_a = getInvmass(bodyA);
   let invmass_b = getInvmass(bodyB);
   let rv = subtract(bodyB.velocity, bodyA.velocity); /* relative velocity */
@@ -132,15 +129,9 @@ let applyFriction = (bodyA: bodyT, bodyB: bodyT, j: float, n: (float, float)) =>
   let ve_t = dot(rv, t); /* relative velocity along tangent */
 
   /* calculate friction to slow objects down */
-  let jt = (-1. *. ve_t) /. (invmass_a +. invmass_b);
-
   let mu = length((bodyA.staticFriction, bodyB.staticFriction));
-  let frictionImpulse = if (abs_float(jt) < j *. mu) {
-    mult(jt, t)
-  } else {
-    let dynamicFriction = length((bodyA.dynamicFriction, bodyB.dynamicFriction));
-    mult(-1. *. dynamicFriction *. j, t)
-  };
+  let jt = (-1. *. mu *. ve_t) /. (invmass_a +. invmass_b);
+  let frictionImpulse = mult(jt, t);
 
   /* apply velocities based on the bodies' mass ratio */
   let velocityA = subtract(bodyA.velocity, mult(invmass_a, frictionImpulse));
@@ -156,45 +147,41 @@ let applyImpulse = (bodyA: bodyT, bodyB: bodyT, n: (float, float), depth: float)
   let rv = subtract(bodyB.velocity, bodyA.velocity); /* relative velocity */
   let ve_n = dot(rv, n); /* relative velocity along normal */
 
-  if (ve_n > 0.) {
-    (bodyA, bodyB)
-  } else {
-    let invmass_a = getInvmass(bodyA);
-    let invmass_b = getInvmass(bodyB);
+  let invmass_a = getInvmass(bodyA);
+  let invmass_b = getInvmass(bodyB);
 
+  if (ve_n > 0. || abs_float(depth) < driftSlop) {
+    /* floating-point drift correction */
+    let d = depth /. (invmass_a +. invmass_b);
+
+    /* apply drift correction */
+    let correction = mult(d, n);
+    let positionA = subtract(bodyA.position, mult(invmass_a, correction));
+    let positionB = add(bodyB.position, mult(invmass_b, correction));
+
+    let bodyA = { ...bodyA, position: positionA };
+    let bodyB = { ...bodyB, position: positionB };
+    applyFriction(bodyA, bodyB, n)
+  } else {
     /* calculate impulse to move objects apart */
     let e = min(bodyA.restitution, bodyB.restitution); /* restitution coefficient */
     let j = (-0.9 *. (1. +. e) *. ve_n) /. (invmass_a +. invmass_b); /* impulse scalar */
     let impulse = mult(j, n);
 
-    if (abs_float(depth) < driftSlop) {
-      /* floating-point drift correction */
-      let d = depth /. (invmass_a +. invmass_b);
+    /* floating-point drift correction */
+    let d = max(depth -. driftSlop, 0.) /. (invmass_a +. invmass_b) *. driftCorrection;
 
-      /* apply drift correction */
-      let correction = mult(d, n);
-      let positionA = subtract(bodyA.position, mult(invmass_a, correction));
-      let positionB = add(bodyB.position, mult(invmass_b, correction));
+    /* apply drift correction */
+    let correction = mult(d, n);
+    let positionA = subtract(bodyA.position, mult(invmass_a, correction));
+    let positionB = add(bodyB.position, mult(invmass_b, correction));
 
-      let bodyA = { ...bodyA, position: positionA };
-      let bodyB = { ...bodyB, position: positionB };
-      applyFriction(bodyA, bodyB, j, n)
-    } else {
-      /* floating-point drift correction */
-      let d = max(depth -. driftSlop, 0.) /. (invmass_a +. invmass_b) *. driftCorrection;
+    /* apply reflection velocities */
+    let velocityA = subtract(bodyA.velocity, mult(invmass_a, impulse));
+    let velocityB = add(bodyB.velocity, mult(invmass_b, impulse));
 
-      /* apply drift correction */
-      let correction = mult(d, n);
-      let positionA = subtract(bodyA.position, mult(invmass_a, correction));
-      let positionB = add(bodyB.position, mult(invmass_b, correction));
-
-      /* apply reflection velocities */
-      let velocityA = subtract(bodyA.velocity, mult(invmass_a, impulse));
-      let velocityB = add(bodyB.velocity, mult(invmass_b, impulse));
-
-      let bodyA = { ...bodyA, velocity: velocityA, position: positionA };
-      let bodyB = { ...bodyB, velocity: velocityB, position: positionB };
-      applyFriction(bodyA, bodyB, j, n)
-    }
+    let bodyA = { ...bodyA, velocity: velocityA, position: positionA };
+    let bodyB = { ...bodyB, velocity: velocityB, position: positionB };
+    applyFriction(bodyA, bodyB, n)
   }
 };
