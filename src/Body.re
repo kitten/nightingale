@@ -9,7 +9,7 @@ type bodyT = {
   force: (float, float),
   restitution: float,
   gravityFactor: float,
-  staticFriction: float,
+  friction: float,
   position: (float, float)
 };
 
@@ -18,7 +18,7 @@ let makeBody = (
   ~mass: float,
   ~restitution: float,
   ~size: (float, float),
-  ~staticFriction: float
+  ~friction: float
 ) => {
   isOnGround: false,
   mass,
@@ -27,7 +27,7 @@ let makeBody = (
   force: (0., 0.),
   restitution,
   gravityFactor: 1.,
-  staticFriction,
+  friction,
   position
 };
 
@@ -129,7 +129,7 @@ let applyFriction = (bodyA: bodyT, bodyB: bodyT, n: (float, float)) => {
   let ve_t = dot(rv, t); /* relative velocity along tangent */
 
   /* calculate friction to slow objects down */
-  let mu = length((bodyA.staticFriction, bodyB.staticFriction));
+  let mu = length((bodyA.friction, bodyB.friction));
   let jt = (-1. *. mu *. ve_t) /. (invmass_a +. invmass_b);
   let frictionImpulse = mult(jt, t);
 

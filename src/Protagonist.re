@@ -90,14 +90,13 @@ let entity = Entity.makeEntity(~name="Protagonist", ~initState, ~initAssets, ~ac
 let make = () : Entity.entityT(stateT, assetsT, actionT) => {
   ...entity,
   initBody: (_env, _global) => {
-    let body = Body.makeBody(
+    Body.makeBody(
       ~position=(0., -2.),
       ~mass=50.,
       ~restitution=0.2,
       ~size=(0.792, 1.83),
-      ~staticFriction=0.05
+      ~friction=0.05
     );
-    { ...body, gravityFactor: 1. }
   },
   updateBody: (body, action, _env, _global) => {
     if (body.isOnGround) {
@@ -114,7 +113,7 @@ let make = () : Entity.entityT(stateT, assetsT, actionT) => {
       let newForceY = switch (action) {
       | JumpRight
       | JumpLeft
-      | JumpUp when forceY > -7000. => -7000.
+      | JumpUp when forceY > -8000. => -8000.
       | _ => forceY
       };
 

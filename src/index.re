@@ -19,8 +19,7 @@ let entity = Entity.instance(Protagonist.make())
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(2., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(3., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(4., 3.))))
-  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 2.))))
-  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 1.))));
+  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 2.))));
 
 let setup = (env) => {
   let global = Global.setup(env);

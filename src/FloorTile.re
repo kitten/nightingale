@@ -22,7 +22,7 @@ let make = (~position: (float, float)) => {
       ~mass=0.,
       ~restitution=0.2,
       ~size=(1., 1.),
-      ~staticFriction=0.05
+      ~friction=0.05
     );
     { ...body, gravityFactor: 0. }
   },
