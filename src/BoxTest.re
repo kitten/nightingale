@@ -16,7 +16,7 @@ let make = (~position: (float, float)) => {
       ~mass=30.,
       ~restitution=0.05,
       ~size=(1., 1.),
-      ~friction=0.4
+      ~friction=0.2
     );
   },
   render: (_state, body, _assets, env) => {

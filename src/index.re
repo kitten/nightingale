@@ -7,7 +7,6 @@ type stateT('instance) = {
 };
 
 let entity = Entity.instance(Protagonist.make())
-  |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-8., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-7., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-6., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-5., 3.))))
@@ -19,7 +18,9 @@ let entity = Entity.instance(Protagonist.make())
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(2., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(3., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(4., 3.))))
-  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 2.))));
+  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(3.5, 1.))))
+  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(-6.5, 0.))))
+  |> Entity.composeInstances(Entity.instance(BoxTest.make(~position=(-6.5, 1.))));
 
 let setup = (env) => {
   let global = Global.setup(env);

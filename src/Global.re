@@ -89,11 +89,11 @@ let createPairs = (bodies: array(Body.bodyT)) => {
 
     /* higher depth comes later (override),
        higher position (LTR) comes later */
-    if (lhDepth < rhDepth) {
+    if (blh_y < brh_y && alh_y < arh_y) {
       -1
-    } else if (alh_x < arh_x && alh_y < arh_y) {
+    } else if (alh_x < arh_x && blh_x < brh_x) {
       -1
-    } else if (blh_x < brh_x && blh_y < brh_y) {
+    } else if (lhDepth < rhDepth) {
       -1
     } else {
       1
