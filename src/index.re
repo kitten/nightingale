@@ -7,9 +7,14 @@ type stateT('instance) = {
 };
 
 let entity = Entity.instance(Protagonist.make())
+  |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-8., 3.))))
+  |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-7., 3.))))
+  |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-6., 3.))))
+  |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-5., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-4., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-3., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-2., 3.))))
+  |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(-1., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(0., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(2., 3.))))
   |> Entity.composeInstances(Entity.instance(FloorTile.make(~position=(3., 3.))))
