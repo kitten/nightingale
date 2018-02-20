@@ -1,3 +1,7 @@
 lib
 node_modules
 .merlin
+ios
+public/assets
+_build
+nightingale.app/

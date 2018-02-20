@@ -4,6 +4,8 @@
     "start": "rsb native:hot",
     "native": "rsb native",
     "bundle": "rsb native:bundle",
+    "ios": "rsb ios",
+    "ios:sim": "rsb ios:sim",
     "all": "rsb all",
     "js": "rsb js",
     "serve": "rsb js:serve",
